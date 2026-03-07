@@ -1,7 +1,5 @@
-# Prog_Cadastro-Cliente
-
-Programa Proj Integrador I - Grupo 7 - UNIVESP<br>
-PJI110-A2026S!N2<br>
+# Programa Proj Integrador I - Grupo 7 - UNIVESP 
+Nota de 05-Mar-26<br>
 Visão inicial (Reunião grupo em 05-Mar-26)<br>
 Aplicação de Cadastro de Clientes para Recebimento de Promoções<br>
 Cadastro de clientes interessados em promoções.<br>
