@@ -1,0 +1,8 @@
+CREATE TABLE clientes(
+id_cliente INT AUTO_INCREMENT PRIMARY KEY,
+nome_cliente VARCHAR(30) NOT NULL,
+whatsapp VARCHAR(20) NOT NULL UNIQUE,
+endereco VARCHAR(50),
+cidade VARCHAR(30) NOT NULL,
+promocao_status BOOLEAN NOT NULL
+)
