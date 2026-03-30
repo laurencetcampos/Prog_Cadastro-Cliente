@@ -9,7 +9,13 @@ app.secret_key = 'super_secret_key_for_flash_messages' # Chave secreta necessár
 @app.route('/')
 def index():
     # Rota raiz: Busca todos os clientes no banco de dados e exibe na página inicial (tabela)
-    clientes = get_clientes()
+    success, result = get_clientes()
+    if success:
+        clientes = result
+    else:
+        clientes = []
+        flash(result, 'danger')
+        
     return render_template('index.html', clientes=clientes)
 
 @app.route('/add_cliente', methods=['GET', 'POST'])
@@ -24,9 +30,13 @@ def add_cliente():
         cidade = request.form['cidade']
         status = 1 if 'status' in request.form else 0
 
-        post_cliente(nome, whatsapp, endereco, cidade, status) # Salva no banco
-        flash('Cliente cadastrado com sucesso!', 'success') # Mensagem de sucesso na tela
-        return redirect(url_for('index')) # Volta para a página inicial
+        success, msg = post_cliente(nome, whatsapp, endereco, cidade, status) # Salva no banco
+        if success:
+            flash(msg, 'success') # Mensagem de sucesso na tela
+            return redirect(url_for('index')) # Volta para a página inicial
+        else:
+            flash(msg, 'danger') # Mensagem de erro na tela (ex: whatsapp duplicado)
+            return render_template('add_cliente.html') # Deixa o usuário tentar novamente
         # ---------- FIM BLOCO INTERFACE WEB ----------
         
         # ---------- INÍCIO BLOCO TESTE API / POSTMAN (DESCOMENTAR PARA USAR) ----------
@@ -58,23 +68,34 @@ def edit_cliente(id):
         cidade = request.form['cidade']
         status = 1 if 'status' in request.form else 0
 
-        update_cliente(id, nome, whatsapp, endereco, cidade, status)
-        flash('Cliente atualizado com sucesso!', 'success')
-        return redirect(url_for('index'))
+        success, msg = update_cliente(id, nome, whatsapp, endereco, cidade, status)
+        if success:
+            flash(msg, 'success')
+            return redirect(url_for('index'))
+        else:
+            flash(msg, 'danger')
+            success_id, cliente_or_msg = get_cliente_by_id(id)
+            if success_id:
+                return render_template('edit_cliente.html', cliente=cliente_or_msg)
+            else:
+                return redirect(url_for('index'))
     
     # Se for GET, busca os dados atuais do cliente para preencher o formulário
-    cliente = get_cliente_by_id(id)
-    if not cliente:
-        flash('Cliente não encontrado!', 'danger')
+    success_id, cliente_or_msg = get_cliente_by_id(id)
+    if not success_id:
+        flash(cliente_or_msg, 'danger')
         return redirect(url_for('index'))
     
-    return render_template('edit_cliente.html', cliente=cliente)
+    return render_template('edit_cliente.html', cliente=cliente_or_msg)
 
 @app.route('/delete_cliente/<int:id>')
 def delete_cliente_route(id):
     # Rota para deletar um cliente, recebe o ID na URL
-    delete_cliente(id)
-    flash('Cliente removido com sucesso!', 'success')
+    success, msg = delete_cliente(id)
+    if success:
+        flash(msg, 'success')
+    else:
+        flash(msg, 'danger')
     return redirect(url_for('index'))
     
 if __name__=="__main__":

@@ -6,7 +6,7 @@ def post_cliente(nome, whatsapp, endereco, cidade, status):
     conexao = cnx()
 
     if conexao is None:
-        return
+        return False, "Erro: Falha na conexão com o banco de dados."
     
     cursor = conexao.cursor()
 
@@ -19,9 +19,14 @@ def post_cliente(nome, whatsapp, endereco, cidade, status):
         )
         conexao.commit() # Efetiva a gravação
         print("Cliente inserido com sucesso!")
+        return True, "Cliente cadastrado com sucesso!"
     except mysql.connector.Error as err:
         conexao.rollback() # Desfaz a operação em caso de erro (ex: WhatsApp duplicado)
-        print("Erro ao cadastrar cliente:", err)
+        err_msg = str(err)
+        print("Erro ao cadastrar cliente:", err_msg)
+        if "Duplicate entry" in err_msg and "whatsapp" in err_msg:
+            return False, "Erro: Este número de WhatsApp já está cadastrado."
+        return False, f"Erro no banco de dados: {err_msg}"
     finally:
         # Garante que a conexão seja fechada liberando recursos
         cursor.close()
@@ -30,17 +35,17 @@ def post_cliente(nome, whatsapp, endereco, cidade, status):
 # Função GET All (Read): Retorna uma lista com todos os clientes cadastrados
 def get_clientes():
     conexao = cnx()
-    if conexao is None: return []
+    if conexao is None: return False, "Falha na conexão com o banco de dados. Verifique o arquivo DB_connection.py"
     
     cursor = conexao.cursor(dictionary=True)
     try:
         # Busca generalizada
         cursor.execute("SELECT * FROM clientes")
         clientes = cursor.fetchall()
-        return clientes
+        return True, clientes
     except mysql.connector.Error as err:
         print("Erro ao buscar clientes:", err)
-        return []
+        return False, f"Erro no banco de dados: {err}"
     finally:
         cursor.close()
         conexao.close()
@@ -48,17 +53,20 @@ def get_clientes():
 # Função GET By ID (Read Específico): Retorna os dados de apenas um cliente usando a chave primária (ID)
 def get_cliente_by_id(id_cliente):
     conexao = cnx()
-    if conexao is None: return None
+    if conexao is None: return False, "Falha na conexão com o banco de dados. Verifique o arquivo DB_connection.py"
     
     cursor = conexao.cursor(dictionary=True)
     try:
         # Busca filtrada com a cláusula WHERE
         cursor.execute("SELECT * FROM clientes WHERE id_cliente = %s", (id_cliente,))
         cliente = cursor.fetchone()
-        return cliente
+        if cliente:
+            return True, cliente
+        else:
+            return False, "Cliente não encontrado!"
     except mysql.connector.Error as err:
         print("Erro ao buscar cliente por ID:", err)
-        return None
+        return False, f"Erro no banco de dados: {err}"
     finally:
         cursor.close()
         conexao.close()
@@ -66,7 +74,7 @@ def get_cliente_by_id(id_cliente):
 # Função PUT/UPDATE (Update): Modifica as informações de um cliente já existente no banco
 def update_cliente(id_cliente, nome, whatsapp, endereco, cidade, status):
     conexao = cnx()
-    if conexao is None: return
+    if conexao is None: return False, "Erro: Falha na conexão com o banco de dados."
     
     cursor = conexao.cursor()
     try:
@@ -78,9 +86,14 @@ def update_cliente(id_cliente, nome, whatsapp, endereco, cidade, status):
         )
         conexao.commit()
         print("Cliente atualizado com sucesso!")
+        return True, "Cliente atualizado com sucesso!"
     except mysql.connector.Error as err:
         conexao.rollback()
-        print("Erro ao atualizar cliente:", err)
+        err_msg = str(err)
+        print("Erro ao atualizar cliente:", err_msg)
+        if "Duplicate entry" in err_msg and "whatsapp" in err_msg:
+            return False, "Erro: Este número de WhatsApp já está cadastrado para outro cliente."
+        return False, f"Erro no banco de dados: {err_msg}"
     finally:
         cursor.close()
         conexao.close()
@@ -88,16 +101,18 @@ def update_cliente(id_cliente, nome, whatsapp, endereco, cidade, status):
 # Função DELETE (Delete): Apaga definitivamente a linha do cliente no banco de dados
 def delete_cliente(id_cliente):
     conexao = cnx()
-    if conexao is None: return
+    if conexao is None: return False, "Erro: Falha na conexão com o banco de dados."
     
     cursor = conexao.cursor()
     try:
         cursor.execute("DELETE FROM clientes WHERE id_cliente = %s", (id_cliente,))
         conexao.commit()
         print("Cliente removido com sucesso!")
+        return True, "Cliente removido com sucesso!"
     except mysql.connector.Error as err:
         conexao.rollback()
         print("Erro ao remover cliente:", err)
+        return False, f"Erro no banco de dados ao tentar remover cliente: {err}"
     finally:
         cursor.close()
         conexao.close()
