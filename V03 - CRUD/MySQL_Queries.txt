@@ -1,0 +1,14 @@
+-- ==============================================================================
+-- QUERIES DO BANCO DE DADOS MYSQL (MySQL_Queries.txt)
+-- Descricao: Script para criar a tabela principal de clientes no banco de dados. 
+-- Define a estrutura necessaria para salvar as informacoes de cadastro.
+-- ==============================================================================
+
+CREATE TABLE clientes( -- Cria a tabela chamada 'clientes'
+id_cliente INT AUTO_INCREMENT PRIMARY KEY, -- ID unico do cliente, incrementado automaticamente (Chave Primaria)
+nome_cliente VARCHAR(30) NOT NULL, -- Nome do cliente, maximo de 30 caracteres (Campo obrigatorio)
+whatsapp VARCHAR(20) NOT NULL UNIQUE, -- Numero de WhatsApp, maximo de 20 caracteres (Obrigatorio e unico no sistema)
+endereco VARCHAR(50), -- Endereco do cliente, maximo de 50 caracteres (Opcional)
+cidade VARCHAR(30) NOT NULL, -- Cidade do cliente, maximo de 30 caracteres (Obrigatorio)
+promocao_status BOOLEAN NOT NULL -- Status de envio de promocoes (Obrigatorio, True/False)
+)

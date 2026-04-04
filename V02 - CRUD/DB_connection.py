@@ -2,7 +2,7 @@ import mysql.connector
 
 config = {
     'user': 'root',
-    'password': '123456',
+    'password': 'UNIVESP&Grupo7',
     'host': 'localhost',
     'database': 'cadastro_clientes'
 }
