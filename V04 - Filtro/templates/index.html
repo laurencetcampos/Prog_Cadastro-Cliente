@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro de Clientes</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="mb-4">Clientes Cadastrados</h1>
+        
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="mb-3 d-flex justify-content-between align-items-center">
+            <a href="{{ url_for('add_cliente') }}" class="btn btn-primary">Adicionar Novo Cliente</a>
+            <button id="btnExportCsv" class="btn btn-success">
+                Exportar para CSV
+            </button>
+        </div>
+
+        <table class="table table-bordered table-striped">
+            <thead class="table-dark">
+                <tr>
+                    <th>ID</th>
+                    <th>Nome</th>
+                    <th>WhatsApp</th>
+                    <th>Endereço</th>
+                    <th>Cidade</th>
+                    <th class="align-middle">
+                        Promoção?
+                        <div class="form-check form-switch d-inline-block ms-2 mb-0" style="vertical-align: middle;">
+                            <input class="form-check-input" type="checkbox" id="chkFilterPromo" title="Filtrar clientes em promoção">
+                        </div>
+                    </th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for cliente in clientes %}
+                <tr>
+                    <td>{{ cliente.id_cliente }}</td>
+                    <td>{{ cliente.nome_cliente }}</td>
+                    <td>{{ cliente.whatsapp }}</td>
+                    <td>{{ cliente.endereco }}</td>
+                    <td>{{ cliente.cidade }}</td>
+                    <td>{{ 'Sim' if cliente.promocao_status else 'Não' }}</td>
+                    <td>
+                        <a href="{{ url_for('edit_cliente', id=cliente.id_cliente) }}" class="btn btn-sm btn-warning">Editar</a>
+                        <a href="{{ url_for('delete_cliente_route', id=cliente.id_cliente) }}" class="btn btn-sm btn-danger" onclick="return confirm('Tem certeza que deseja excluir?');">Excluir</a>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="7" class="text-center">Nenhum cliente cadastrado.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const chkFilterPromo = document.getElementById("chkFilterPromo");
+            const btnExportCsv = document.getElementById("btnExportCsv");
+            const tableBody = document.querySelector("table tbody");
+
+            // Lógica de Filtro
+            chkFilterPromo.addEventListener("change", function () {
+                const showOnlyPromo = this.checked;
+                const rows = tableBody.querySelectorAll("tr");
+
+                rows.forEach(row => {
+                    if (row.cells.length === 1) return; // Ignora linha de estado vazio
+                    const promoCell = row.cells[5];
+                    if (promoCell) {
+                        const isPromo = promoCell.textContent.trim() === 'Sim';
+                        if (showOnlyPromo && !isPromo) {
+                            row.style.display = 'none';
+                        } else {
+                            row.style.display = ''; // Mostra a linha
+                        }
+                    }
+                });
+            });
+
+            // Lógica de Exportação para CSV
+            btnExportCsv.addEventListener("click", function () {
+                let csvData = [];
+                const rows = document.querySelectorAll("table tr");
+
+                rows.forEach((row, rowIndex) => {
+                    // Ignora as linhas escondidas pelo filtro e de estado vazio
+                    if (row.closest("tbody") && row.style.display === 'none') return;
+                    if (row.cells.length === 1 && row.cells[0].colSpan > 1) return;
+
+                    let rowData = [];
+                    for (let i = 0; i < row.cells.length; i++) {
+                        if (i === 6) continue; // Pula a coluna 'Ações'
+                        
+                        let text = row.cells[i].textContent.trim();
+                        // Ajusta o texto do cabeçalho devido aos elementos HTML extras
+                        if (rowIndex === 0 && i === 5) {
+                            text = "Promoção?"; 
+                        }
+                        
+                        text = '"' + text.replace(/"/g, '""') + '"';
+                        rowData.push(text);
+                    }
+                    csvData.push(rowData.join(";"));
+                });
+
+                // Adiciona o BOM UTF-8 para correção de acentos no Excel (.csv com separador ;)
+                const csvContent = "\uFEFF" + csvData.join("\r\n");
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                
+                const link = document.createElement("a");
+                link.setAttribute("href", url);
+                link.setAttribute("download", "clientes.csv");
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+                URL.revokeObjectURL(url);
+            });
+        });
+    </script>
+</body>
+</html>
