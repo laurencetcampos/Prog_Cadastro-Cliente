@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Editar Cliente</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        /* Nova implementação na V05: Estilo de cor bege claro para o fundo */
+        body { background-color: #E8F5E9 !important; }
+    </style>
 </head>
 <body>
     <div class="container mt-5">
@@ -34,5 +38,12 @@
             <a href="{{ url_for('index') }}" class="btn btn-secondary">Cancelar</a>
         </form>
     </div>
+    <script>
+        // Nova implementação na V05: Máscara para auxiliar no cadastro do número de telefone (WhatsApp)
+        document.getElementById('whatsapp').addEventListener('input', function (e) {
+            let x = e.target.value.replace(/\D/g, '').match(/(\d{0,2})(\d{0,5})(\d{0,4})/);
+            e.target.value = !x[2] ? x[1] : '(' + x[1] + ') ' + x[2] + (x[3] ? '-' + x[3] : '');
+        });
+    </script>
 </body>
 </html>
